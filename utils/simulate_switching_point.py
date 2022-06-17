@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Script to simulate contigs with alternating genetic codes
+Script to simulate contigs with multiple genetic codes
 """
 import os
 import pandas as pd
@@ -39,10 +39,10 @@ def read_genome(genome, coords, genetic_code):
         for i in range(1, len(records)):
             seqs += records[i].seq
 
-        # update the coordinates by adding length of all previous reads to obtain the correct positions in the concatenated sequence                                                                    
+        # update the coordinates by adding length of all previous reads to obtain the correct positions in the concatenated sequence
         to_add = 0
 
-        # iterate over all the ids of the reads (sometimes they are short so that there are no genes --> cannot use the dataframe)                                                                      
+        # iterate over all the ids of the reads (sometimes they are short so that there are no genes --> cannot use the dataframe)
         for i, seq_id in enumerate([seq.id for seq in records]):
             if i == 0:
                 continue
@@ -60,7 +60,7 @@ def read_genome(genome, coords, genetic_code):
 def simulate_switch_point(genome_11, genome_4, mgm_predictions_11, mgm_predictions_4, path_to_genomes,
                           path_to_annotations, output_name):
     """
-    Simulate a genome with alternating genetic codes by merging random segments from two genomes with different segments
+    Simulate a genome with multiple genetic codes by merging random segments from two genomes with different segments
     :param genome_11: str, genome with standard genetic code
     :param genome_4: str, genome with genetic code 4
     :param mgm_predictions_11: str, mgm code 11 predictions corresponding to genome_11
@@ -110,8 +110,10 @@ def simulate_switch_point(genome_11, genome_4, mgm_predictions_11, mgm_predictio
         # move to intergenic region between current gene and next gene
         start_1 = int((coords1.loc[ind, 'end'] + coords1.loc[ind + 1, 'start']) / 2)
      
-    if coords1[(coords1['start'] <= start_1 + splitting_point) & (coords1['end'] > splitting_point + start_1)].index.values.shape[0] >= 1:
-        ind = coords1[(coords1['start'] <= start_1 + splitting_point) & (coords1['end'] > splitting_point + start_1)].index.values[-1]
+    if coords1[(coords1['start'] <= start_1 + splitting_point) &
+               (coords1['end'] > splitting_point + start_1)].index.values.shape[0] >= 1:
+        ind = coords1[(coords1['start'] <= start_1 + splitting_point) &
+                      (coords1['end'] > splitting_point + start_1)].index.values[-1]
         # move to intergenic region between current gene or end of sequence
         try:
             margin1 = int((coords1.loc[ind, 'end'] + coords1.loc[ind + 1, 'start']) / 2)  - start_1 - splitting_point - 1
@@ -124,14 +126,17 @@ def simulate_switch_point(genome_11, genome_4, mgm_predictions_11, mgm_predictio
             start_2 = int((coords2.loc[ind, 'start'] + coords2.loc[ind - 1, 'end']) / 2)
         except KeyError:
             start_2 = 0
-    if coords2[(coords2['start'] <= start_2 + (200000 - splitting_point)) & (coords2['end'] > start_2 + (200000 - splitting_point))].index.values.shape[0] >= 1:
-        ind = coords2[(coords2['start'] <= start_2 + (200000 - splitting_point)) & (coords2['end'] > start_2 + (200000 - splitting_point))].index.values[0]
+    if coords2[(coords2['start'] <= start_2 + (200000 - splitting_point)) &
+               (coords2['end'] > start_2 + (200000 - splitting_point))].index.values.shape[0] >= 1:
+        ind = coords2[(coords2['start'] <= start_2 + (200000 - splitting_point)) &
+                      (coords2['end'] > start_2 + (200000 - splitting_point))].index.values[0]
         # move to previous intergenic region
         margin2 = int((coords2.loc[ind, 'start'] + coords2.loc[ind - 1, 'end']) / 2) - start_2 - (200000 - splitting_point) - 1
 
-    # simulated genome with alternating genetic codes
+    # simulated genome with multiple genetic codes
     mixed_seq = seq1[start_1: start_1 + splitting_point + margin1] + seq2[start_2: start_2 + (200000 - splitting_point) + margin2]
-    switch_zone = ((coords1['end'][coords1['end'] < start_1 + margin1 + splitting_point].values[-1] - start_1), (coords2['start'][coords2['start'] >= start_2].values[0] - start_2 + margin1 + splitting_point))
+    switch_zone = ((coords1['end'][coords1['end'] < start_1 + margin1 + splitting_point].values[-1] - start_1),
+                   (coords2['start'][coords2['start'] >= start_2].values[0] - start_2 + margin1 + splitting_point))
     with open(f"{path_to_genomes}{output_name}.fna", 'w+') as f:
         f.writelines(f">{name1}, {name2}, {label1} to {label2} between {switch_zone}")
         f.writelines('\n')
@@ -148,17 +153,22 @@ def simulate_switch_point(genome_11, genome_4, mgm_predictions_11, mgm_predictio
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(description="Simulate contigs with alternating genetic codes")
-    parser.add_argument('-d1', '--directory_genomes_11', help='Directory to genomes with standard genetic code', required=True)
+    parser = argparse.ArgumentParser(description="Simulate contigs with multiple genetic codes")
+    parser.add_argument('-d1', '--directory_genomes_11', help='Directory to genomes with standard genetic code',
+                        required=True)
     parser.add_argument('-d2', '--directory_genomes_4', help='Directory to genome with genetic code 4', required=True)
-    parser.add_argument('-p1', '--mgm_predictions_11', help='Directory to MGM predictions of genomes with standard genetic code', required=True)
-    parser.add_argument('-p2', '--mgm_predictions_4', help='Directory to MGM predictions of genomes with genetic code 4', required=True)  
+    parser.add_argument('-p1', '--mgm_predictions_11', help='Directory to MGM predictions of genomes with standard genetic code',
+                        required=True)
+    parser.add_argument('-p2', '--mgm_predictions_4', help='Directory to MGM predictions of genomes with genetic code 4',
+                        required=True)
     parser.add_argument('-g', '--genomes', help='Output directory for simulated genomes', required=True)
     parser.add_argument('-a', '--annotations', help='Output directory for annotations', required=True)
     args = parser.parse_args()
 
-    genomes_11 = [os.path.join(args.directory_genomes_11, f) for f in os.listdir(args.directory_genomes_11) if os.path.isfile(os.path.join(args.directory_genomes_11, f))]
-    genomes_4 = [os.path.join(args.directory_genomes_4, f) for f in os.listdir(args.directory_genomes_4) if os.path.isfile(os.path.join(args.directory_genomes_4, f))]
+    genomes_11 = [os.path.join(args.directory_genomes_11, f) for f in os.listdir(args.directory_genomes_11)
+                  if os.path.isfile(os.path.join(args.directory_genomes_11, f))]
+    genomes_4 = [os.path.join(args.directory_genomes_4, f) for f in os.listdir(args.directory_genomes_4)
+                 if os.path.isfile(os.path.join(args.directory_genomes_4, f))]
 
     nr_genomes_11 = len(genomes_11)
     nr_genomes_4 = len(genomes_4)
