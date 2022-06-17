@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -------------------------------------------------
-# AlternatingGeneticCodeAnnotator
+# Mgcod
 # Aaron Pfennig
 # Georgia Institute of Technology
 # -------------------------------------------------

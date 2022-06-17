@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Script to summarize AGCA predictions on metagenomic contigs
+Script to summarize Mgcod predictions on metagenomic contigs
 """
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -30,10 +30,10 @@ def get_size_and_gc(path):
 
 def read_results(result_paths, genome_paths):
     """
-    Parse AGCA results
-    :param result_paths: list, paths to AGCA results (*.tab files)
+    Parse Mgcod results
+    :param result_paths: list, paths to Mgcod results (*.tab files)
     :param genome_paths: dict, mapping of contigs to contig paths
-    :return: pd.DataFrame, AGCA results
+    :return: pd.DataFrame, Mgcod results
     """
     results = pd.DataFrame(columns=['genetic_code', 'segment_length', 'genome_size', 'gc', 'genes_11',
                                     'genes_4', 'genes_15', 'genes_101', 'genes_equivalent']) 
@@ -79,8 +79,8 @@ def read_results(result_paths, genome_paths):
 def filter_contigs_based_on_segment_length(results):
     """
     Filter out contigs whose shorter block is shorter than 20% of the contig
-    :param results: pd.DataFrame, AGCA results
-    :return: pd.DataFrame, filtered AGCA results
+    :param results: pd.DataFrame, Mgcod results
+    :return: pd.DataFrame, filtered Mgcod results
     """
     to_keep = []
     segment_lengths = results.segment_length.values
@@ -101,9 +101,9 @@ def filter_contigs_based_on_segment_length(results):
 def find_contigs_with_dual_coding(results):
     """
     Extract results of metagenomic contigs with dual coded blocks
-    :param results: pd.DataFrame, AGCA results
+    :param results: pd.DataFrame, Mgcod results
     :return: pd.DataFrame, dict, extended dataframe indicating dual coding, mapping of genetic code and frequency with
-                                 that it is dual coded in contigs with different types of alternating genetic codes
+                                 that it is dual coded in contigs with different types of multiple genetic codes
     """
     genetic_codes = results.genetic_code.values
     genes_11 = results.genes_11.values
@@ -178,11 +178,11 @@ def find_contigs_with_dual_coding(results):
 
 def summarize_results(results, output_path):
     """
-    Summarize AGCA results on metagenomic contigs
-    :param results: pd.DataFrame, AGCA predictions
+    Summarize Mgcod results on metagenomic contigs
+    :param results: pd.DataFrame, Mgcod predictions
     :param output_path: str, path to where to save summary file
     :return: pd.DataFrame, dict, extended dataframe indicating dual coding, mapping of genetic code and frequency with
-                                 that it is dual coded in contigs with different types of alternating genetic codes
+                                 that it is dual coded in contigs with different types of multiple genetic codes
     """
     print(f"Total {results.shape[0]} samples")
     print(f"11\t{results[results.genetic_code.values == '11'].shape[0]}")
@@ -237,9 +237,9 @@ def summarize_results(results, output_path):
 def plot_frequency_with_that_a_genetic_code_is_distinctly_encoded_in_one_block(dual_coded_segments, plot_dir):
     """
     Plots the frequency with that a black is distinctly encoded in a particular genetic code in phages with
-    different types of alternating genetic codes
+    different types of multiple genetic codes
     :param dual_coded_segments: dict, mapping of genetic code and frequency with
-                                      that it is dual coded in contigs with different types of alternating genetic codes
+                                      that it is dual coded in contigs with different types of multiple genetic codes
     :param plot_dir: str, directory where to save figure (frequency_of_blocks_with_distinct_code)
     """
     colors = {11: 'blue', 4: 'green', 15: 'red', 101: 'orange'}
@@ -270,7 +270,7 @@ def plot_frequency_with_that_a_genetic_code_is_distinctly_encoded_in_one_block(d
     ax.set_xticks([i for i in range(len(x_labels))])
     ax.set_xticklabels(x_labels)
     ax.set_ylabel("Frequency of blocks with distinct genetic code")
-    ax.set_xlabel('Type of alternating genetic codes')
+    ax.set_xlabel('Type of multiple genetic codes')
     legend_elements = []
     genetic_codes = sorted(set([y for x in x_labels for y in x.split('/')]))
     for gc in genetic_codes:
@@ -287,7 +287,7 @@ def plot_frequency_with_that_a_genetic_code_is_distinctly_encoded_in_one_block(d
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(description="Summarizes AGCA predictions on metagenomic contigs")
+    parser = argparse.ArgumentParser(description="Summarizes Mgcod predictions on metagenomic contigs")
     parser.add_argument("-r", "--results", help='File with paths to result files, one path per line', required=True)
     parser.add_argument("-g", "--genomes", help="File with paths to genome files, one path per line", required=True)
     parser.add_argument("-o", "--output", help="Path to file to write summarized dataframe to", required=True)

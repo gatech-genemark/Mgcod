@@ -1,4 +1,4 @@
-#!/home/aaron/anaconda3/envs/geneticcode/bin/python3.7
+#!/usr/bin/env python
 """
 Parse fastANI results and summarize average ANI values
 """

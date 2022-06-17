@@ -31,14 +31,14 @@ def read_queries(input_file):
     return queries
 
 
-def predict_genes(input_files, output_dir, agca_results, mgm_results, agca):
+def predict_genes(input_files, output_dir, mgcod_results, mgm_results, mgcod):
     """
-    Run AGCA on target genomes
+    Run Mgcod on target genomes
     :param input_files: list, paths to target genomes
     :param output_dir: str, directory where to save results
-    :param agca_results: str, directory where to save AGCA results
+    :param mgcod_results: str, directory where to save Mgcod results
     :param mgm_results: str, directory where to save MGM results
-    :param agca: str, path to AGCA script
+    :param mgcod: str, path to Mgcod script
     :return: dictionary, mapping gene ids to gene descriptions
     """
     cwd = output_dir
@@ -47,12 +47,12 @@ def predict_genes(input_files, output_dir, agca_results, mgm_results, agca):
     if os.path.isfile(f'{cwd}to_cluster.fna'):
         os.remove(f'{cwd}to_cluster.fna')
     for path_to_file in input_files:
-        if not os.path.isfile(f"{agca_results}proteins_nt_{path_to_file.split('/')[-1][:-4]}.fasta"):
-            subprocess.call(['python', agca, '-i', f'{path_to_file}',
-                             '-o', agca_results, '-p', mgm_results, '-r', '--isoforms', '-NT', '-AA']) 
+        if not os.path.isfile(f"{mgcod_results}proteins_nt_{path_to_file.split('/')[-1][:-4]}.fasta"):
+            subprocess.call(['python', mgcod, '-i', f'{path_to_file}',
+                             '-o', mgcod_results, '-p', mgm_results, '-r', '--isoforms', '-NT', '-AA'])
         # prepare for clustering
         # read predictions
-        records_nt = list(SeqIO.parse(f"{agca_results}proteins_nt_{path_to_file.split('/')[-1][:-4]}.fasta", 'fasta'))
+        records_nt = list(SeqIO.parse(f"{mgcod_results}proteins_nt_{path_to_file.split('/')[-1][:-4]}.fasta", 'fasta'))
 
         #records_capitalized = []
         for rec_nt in records_nt:
@@ -320,12 +320,12 @@ def plot_amino_acid_counts(counts):
 def main(argv):
     parser = argparse.ArgumentParser(description="Validate predicted stop codon reassignments using MSA")
     parser.add_argument('--input_genomes', nargs="+", help='txt files containing one genome per line', required=True)
-    parser.add_argument('--agca_results', nargs="+", help='Paths to AGCA results', required=True)
+    parser.add_argument('--mgcod_results', nargs="+", help='Paths to Mgcod results', required=True)
     parser.add_argument('--mgm_results', nargs="+", help='Paths to MGM results', required=True)
     parser.add_argument('--output_dir', nargs="+", help='Paths to output directory', required=True)
     parser.add_argument('--reassigned_stop_codon', nargs="+", help='Stop codons that are reassigned', required=True)
     parser.add_argument('--clustalo_path', help='Specify clustalo path', default='clustalo')
-    parser.add_argument('--agca_path', help='Specify AGCA path', default='bin/agca.py')
+    parser.add_argument('--mgcod_path', help='Specify Mgcod path', default='bin/mgcod.py')
     parser.add_argument('--usearch_path', help='Specify sumaclust path', default='usearch11.0.667_i86linux32')
     parser.add_argument('--log', default='./confirming_reassignment_msa.log', help='Path to Log file [./confirming_reassignment_msa.log]',
                         required=False)
@@ -333,12 +333,12 @@ def main(argv):
     amino_acid_counts = {}
     logging.basicConfig(filename=args.log, level=logging.INFO,
                         format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
-    for input_genomes, agca_results, mgm_results, output_dir, stop_codon in zip(args.input_genomes, args.agca_results,
+    for input_genomes, mgcod_results, mgm_results, output_dir, stop_codon in zip(args.input_genomes, args.mgcod_results,
                                                                                args.mgm_results, args.output_dir, args.reassigned_stop_codon):
         logging.info("Reading queries")
         queries = read_queries(input_genomes)
         logging.info("Predicting genes")
-        gene_id_mapping = predict_genes(queries, output_dir, agca_results, mgm_results, args.agca_path)
+        gene_id_mapping = predict_genes(queries, output_dir, mgcod_results, mgm_results, args.mgcod_path)
         gene_id_contig_mapping = {k: v.split(' ')[0] for (k, v) in gene_id_mapping.items()}
         logging.info("Clustering predicted genes")
         cluster_for_msa, cluster_contig_mapping = cluster_genes(gene_id_contig_mapping, output_dir, args.usearch_path)

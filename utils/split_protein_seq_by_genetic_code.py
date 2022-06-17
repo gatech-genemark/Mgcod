@@ -53,7 +53,8 @@ def write_coding_seq(seqs_by_code, seq_type, output_base):
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Split sequences of annotated coding sequences by genetic code")
-    parser.add_argument('--input_fasta', help='Fasta file with proteins of different genetic code outputed by AGCA', required=True)
+    parser.add_argument('--input_fasta', help='Fasta file with proteins of different genetic code outputed by Mgcod',
+                        required=True)
     parser.add_argument('--seq_type', required=True)
     args = parser.parse_args()
     output_base = '/'.join(args.input_fasta.split('/')[:-1])
