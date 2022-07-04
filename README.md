@@ -141,6 +141,6 @@ An example run of Mgcod on Phage2<sup>1</sup> with default settings
 **R2.** Wenhan Zhu, Alexandre Lomsadze, Mark Borodovsky, Ab initio gene identification in metagenomic sequences , Nucleic Acids Research, Volume 38, Issue 12, 1 July 2010, Page e132, https://doi.org/10.1093/nar/gkq275
 
 ### Citation
-If you use Mgcod, please cite:
+If you use Mgcod, please cite:<br>
 Aaron Pfennig, Alexandre Lomsadze, and Mark Borodovsky. 2022. “Annotation of Phage Genomes with Multiple Genetic Codes.” BioRxiv, https://doi.org/10.1101/2022.06.29.495998.
 
