@@ -142,4 +142,5 @@ An example run of Mgcod on Phage2<sup>1</sup> with default settings
 
 ### Citation
 If you use Mgcod, please cite:
+Aaron Pfennig, Alexandre Lomsadze, and Mark Borodovsky. 2022. “Annotation of Phage Genomes with Multiple Genetic Codes.” BioRxiv, https://doi.org/10.1101/2022.06.29.495998.
 
