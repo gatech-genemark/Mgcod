@@ -44,11 +44,12 @@ The code is implemented in Python and was tested with Python version 3.7.3. Addi
 - matplotlib v3.2.2
 - multiprocess-logging v0.3.1
 
-The code was tested with the above specified version and it is recommend to use these versions if possible. The python dependencies can be conveniently installed from the provided `environment.yml` file:<br>
-`conda create env -f environment.yml`
+The code was tested with the above specified version and it is recommend to use these versions if possible. Mgcod is now available from Bioconda and can be installed using the following command:<br>
+
+`conda install -c bioconda mgcod`
 
 #### MetaGeneMark
-Mgcod uses MetaGeneMark including models for genetic code 11, 4, 15 and 101. Both MetaGeneMark and genetic code models are already included in the `dependencies/` folder. MetaGeneMark is distributed with a different license. Please, agree with license conditions and download corresponding license key file from [http://exon.gatech.edu/GeneMark/license_download.cgi](http://exon.gatech.edu/GeneMark/license_download.cgi).
+Mgcod uses MetaGeneMark including models for genetic code 11, 4, 15 and 101. Both MetaGeneMark and genetic code models are already included in the `dependencies/` folder. MetaGeneMark is distributed with a different license. Please, agree with license conditions and download corresponding license key file from [http://exon.gatech.edu/GeneMark/license_download.cgi](http://exon.gatech.edu/GeneMark/license_download.cgi). The GeneMark key should be located in `$HOME/.gm_key`.
 
 ### Output files
 Mgcod creates a series of output files:
