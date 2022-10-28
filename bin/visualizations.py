@@ -111,7 +111,7 @@ class Visualizations:
         for start, stop in zip(starts_neg, stops_neg):
             ax1.axvspan(start, stop, 0.25, 0.5, color='black')
         ax1.set_yticks([5, 15])
-        ax1.set_yticklabels(['Genes predicted in negative strand', 'Genes predicted in negative strand'], fontsize=10)
+        ax1.set_yticklabels(['Genes predicted in negative strand', 'Genes predicted in positive strand'], fontsize=10)
         ax1.tick_params(top=False, bottom=False, left=False, right=False, labelleft=False, labelbottom=False,
                         labelright=True)
         ax1.spines['top'].set_visible(False)
