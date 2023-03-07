@@ -54,7 +54,7 @@ Alternatively, Mgcod can be installed by cloning this repository and installing 
 ```
 git clone https://github.com/gatech-genemark/Mgcod.git
 cd Mgcod/
-conda env create -f environment. yml
+conda env create -f environment.yml
 conda activate mgcod
 ```
 #### MetaGeneMark
