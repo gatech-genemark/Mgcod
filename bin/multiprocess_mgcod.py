@@ -20,7 +20,7 @@ def get_command(args):
         cwd = sys.path[0]
         command = ['{}/mgcod.py'.format(cwd), '-o', args.output, '-p', args.path_to_predictions, '-n',
                    str(args.consecutive_windows), '-g', str(args.consecutive_gene_labels), '-w', str(args.window_size),
-                   '-st', str(args.stride), '-t', str(args.tolerance)]
+                   '-t', str(args.tolerance)]
         if args.path_to_plots:
             command.append('-m')
             command.append(args.path_to_plots)
@@ -36,6 +36,9 @@ def get_command(args):
             command.append('-NT')
         if args.short_contigs:
             command.append('--short_contigs')
+        if args.stride:
+            command.appen('-st')
+            command.append(str(args.stride)) 
         logging.info(f"Base command: {' '.join(command)}")
         return command
 
@@ -90,8 +93,8 @@ def main(argv):
                                                            "relevant for isoform prediction. [5000]",
                                default=5000, dest='window_size', required=False, type=int)
     optional_args.add_argument('-st', '--stride', help='Step size in bp, with which window will be moved along sequence'
-                                                       '. Only relevant for isoform prediction. [5000]',
-                               default=5000, required=False, type=int, dest='stride')
+                                                       '. Only relevant for isoform prediction. [If sequence <= 100 kb 2500 bp else 5000 bp]',
+                               default=None, required=False, type=int, dest='stride')
     optional_args.add_argument('-t', '--tolerance', help='The maximally tolerated difference in prediction of gene '
                                                          'start or gene stop to consider the prediction of two models '
                                                          'isoforms. Only relevent for isoform prediction. [30]',

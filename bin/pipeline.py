@@ -110,12 +110,16 @@ class Pipeline:
             self.updated_genome_labels = updated_labels
             # unique genetic code predicted
             if np.unique(np.concatenate(self.updated_genome_labels)).shape[0] == 1:
+                breakpoint()
                 logging.info(f"{self.species} is genetic code {self.label_to_gcode[self.updated_genome_labels[0][0]]}")
                 if self.verbose:
                     print(f"{self.species} is genetic code {self.label_to_gcode[self.updated_genome_labels[0][0]]}")
                 self.genome_label = self.label_to_gcode[self.updated_genome_labels[0][0]]
                 # naming only for compatibility --> no isoforms predicted in this case
                 self.coords_w_isoforms = self.label_to_gene_coords[self.gcode_to_label[self.genome_label]]
+                self.predicted_switch_regions = {}
+                for n, seq in enumerate(self.sequence):
+                    self.predicted_switch_regions[seq.id] = None
             # check for isoforms and segementate genome
             else:
                 # compare prediction of the two models --> determine isoforms
@@ -165,6 +169,19 @@ class Pipeline:
         if length_seq < 5000:
             logging.warning(f"Contig {contig} in {self.species} is shorter than 5000bp. "
                             f"Classification results may be not as reliable")
+        # dynamically set stride
+        if self.stride is None and length_seq <= 100000:
+            stride = 2500
+            logging.info(f"Setting stride to {stride} for {contig}")
+            if self.verbose:
+                print(f"Setting stride to {stride} for {contig}")
+        elif self.stride is None and length_seq > 100000:
+            stride = 5000
+            logging.info(f"Setting stride to {stride} for {contig}")
+            if self.verbose:
+                print(f"Setting stride to {stride} for {contig}")
+        else:
+            stride = self.stride
         start = 0
         end = self.window_size
         labels = []
@@ -175,7 +192,7 @@ class Pipeline:
         short_contigs = []
         short_contigs_not_classified = []
         # apply sliding window approach
-        while start <= length_seq:
+        while start < length_seq:
             starts.append(start)
             if length_seq <= 5000 and not self.short_contigs:
                 short_contigs_not_classified.append(contig)
@@ -193,10 +210,22 @@ class Pipeline:
                 contig_labels = []
                 contig_logodd_scores = []
                 length_seq = len(self.sequence[contigs_seen].seq)
+                # dynamically set stride
+                if self.stride is None and length_seq <= 100000:
+                    stride = 2500
+                    logging.info(f"Setting stride to {stride} for {contig}")
+                    if self.verbose:
+                        print(f"Setting stride to {stride} for {contig}")
+                elif self.stride is None and length_seq > 100000:
+                    stride = 5000
+                    logging.info(f"Setting stride to {stride} for {contig}")
+                    if self.verbose:
+                        print(f"Setting stride to {stride} for {contig}")
+                else:
+                    stride = self.stride
                 continue
 
-            # if contig is short so that less than n windows would fit in there do not apply sliding window approach
-            if length_seq <= self.window_size + (self.consecutive_windows - 1) * self.stride:
+            if length_seq <= self.window_size + (self.consecutive_windows - 1) * stride:
                 # get contig label
                 contig_labels.append(
                     np.argmax([self.gene_coords_11[self.gene_coords_11.contig == contig]['logodd'].sum(),
@@ -213,9 +242,9 @@ class Pipeline:
                     contig_labels.append(0)
                     contig_logodd_scores.append((0, 0, 0, 0))
                 if length_seq > self.window_size and len(contig_labels) == 1:
-                    contig_labels = contig_labels * int(np.ceil((length_seq - self.window_size) / self.stride) + 1)
+                    contig_labels = contig_labels * int(np.ceil((length_seq - self.window_size) / stride) + 1)
                     contig_logodd_scores = contig_logodd_scores * int(
-                        np.ceil((length_seq - self.window_size) / self.stride) + 1)
+                        np.ceil((length_seq - self.window_size) / stride) + 1)
                 # prepare next iteration
                 labels.append(np.array(contig_labels))
                 logodd_scores.append(np.array(contig_logodd_scores))
@@ -228,6 +257,19 @@ class Pipeline:
                 if contigs_seen > self.nr_contigs - 1:
                     break
                 length_seq = len(self.sequence[contigs_seen].seq)
+                # dynamically set stride
+                if self.stride is None and length_seq <= 100000:
+                    stride = 2500
+                    logging.info(f"Setting stride to {stride} for {contig}")
+                    if self.verbose:
+                        print(f"Setting stride to {stride} for {contig}")
+                elif self.stride is None and length_seq > 100000:
+                    stride = 5000
+                    logging.info(f"Setting stride to {stride} for {contig}")
+                    if self.verbose:
+                        print(f"Setting stride to {stride} for {contig}")
+                else:
+                    stride = self.stride
                 contig = self.sequence[contigs_seen].id
                 contig_labels = []
                 contig_logodd_scores = []
@@ -285,17 +327,17 @@ class Pipeline:
             # save window label
             contig_labels.append(window_label)
             # update parameters
-            start += self.stride
-            end += self.stride
+            start += stride
+            end += stride
             # go to next contig
-            if start > length_seq and contigs_seen < self.nr_contigs - 1:
+            if start >= length_seq and contigs_seen < self.nr_contigs - 1:
                 if len(contig_labels) == 0:
                     contig_labels.append(0)
                     contig_logodd_scores.append((0, 0, 0, 0))
                 if length_seq > self.window_size and len(contig_labels) == 1:
-                    contig_labels = contig_labels * int(np.ceil((length_seq - self.window_size) / self.stride) + 1)
+                    contig_labels = contig_labels * int(np.ceil((length_seq - self.window_size) / stride) + 1)
                     contig_logodd_scores = contig_logodd_scores * int(
-                        np.ceil((length_seq - self.window_size) / self.stride) + 1)
+                        np.ceil((length_seq - self.window_size) / stride) + 1)
                 labels.append(np.array(contig_labels))
                 logodd_scores.append(np.array(contig_logodd_scores))
                 if length_seq < 5000:
@@ -305,20 +347,32 @@ class Pipeline:
                     break
                 contig = self.sequence[contigs_seen].id
                 length_seq = len(self.sequence[contigs_seen].seq)
-
+                # dynamically set stride
+                if self.stride is None and length_seq <= 100000:
+                    stride = 2500
+                    logging.info(f"Setting stride to {stride} for {contig}")
+                    if self.verbose:
+                        print(f"Setting stride to {stride} for {contig}")
+                elif self.stride is None and length_seq > 100000:
+                    stride = 5000
+                    logging.info(f"Setting stride to {stride} for {contig}")
+                    if self.verbose:
+                        print(f"Setting stride to {stride} for {contig}")
+                else:
+                    stride = self.stride
                 start = 0
                 end = self.window_size
                 contig_labels = []
                 contig_logodd_scores = []
 
-            elif start > length_seq and contigs_seen >= self.nr_contigs - 1:
+            elif start >= length_seq and contigs_seen >= self.nr_contigs - 1:
                 if len(contig_labels) == 0:
                     contig_labels.append(0)
                     contig_logodd_scores.append((0, 0, 0, 0))
                 if length_seq > self.window_size and len(contig_labels) == 1:
-                    contig_labels = contig_labels * int(np.ceil((length_seq - self.window_size) / self.stride) + 1)
+                    contig_labels = contig_labels * int(np.ceil((length_seq - self.window_size) / stride) + 1)
                     contig_logodd_scores = contig_logodd_scores * int(
-                        np.ceil((length_seq - self.window_size) / self.stride) + 1)
+                        np.ceil((length_seq - self.window_size) / stride) + 1)
                 labels.append(np.array(contig_labels))
                 logodd_scores.append(np.array(contig_logodd_scores))
         if len(short_contigs) >= 1 and self.short_contigs:
@@ -350,6 +404,13 @@ class Pipeline:
             current_contig = self.sequence[n].id
             current_genome_labels = self.updated_genome_labels[n]
             reference = current_genome_labels[0]
+            # dynamically set stride
+            if self.stride is None and len(self.sequence[n].seq) <= 100000:
+                stride = 2500
+            elif self.stride is None and len(self.sequence[n].seq) > 100000:
+                stride = 5000
+            else:
+                stride = self.stride
             start = 1
             segment_start = 1
             conf_1 = []
@@ -366,8 +427,8 @@ class Pipeline:
                 if reference == current_genome_labels[i]:
                     i += 1
                 else:
-                    start = (i - 1) * self.stride
-                    end = i * self.stride + self.window_size
+                    start = (i - 1) * stride 
+                    end = i * stride + self.window_size
                     # previous genetic code
                     original_coords = self.label_to_gene_coords[current_genome_labels[i - 1]][
                         self.label_to_gene_coords[current_genome_labels[i - 1]].contig == current_contig]
@@ -698,10 +759,10 @@ class Pipeline:
                                 (coords_2.start < start) & (coords_2.end > end) & (coords_2.strand == strand)].copy()
                             gene.reset_index(drop=True, inplace=True)
                             gene.drop('seen', axis=1, inplace=True)
-                            gene.loc[0, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
+                            gene.loc[:, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
                                 gene.attributes.values[0].split(
                                     ';')[1:])
-                            gene.loc[0, 'gene_label'] = 2
+                            gene.loc[:, 'gene_label'] = 2
                             current_gene_set_w_isoforms = current_gene_set_w_isoforms.append(gene,
                                                                                              ignore_index=True,
                                                                                              sort=True)
@@ -724,10 +785,10 @@ class Pipeline:
                             gene = coords_1.loc[(coords_1.start >= overspanning_gene.start.values[0]) &
                                                 (coords_1.end < overspanning_gene.end.values[0])].copy()
                             gene.reset_index(drop=True, inplace=True)
-                            gene.loc[0, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
+                            gene.loc[:, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
                                 gene.attributes.values[0].split(
                                     ';')[1:])
-                            gene.loc[0, 'gene_label'] = 1
+                            gene.loc[:, 'gene_label'] = 1
                             current_gene_set_w_isoforms = current_gene_set_w_isoforms.append(gene, ignore_index=True,
                                                                                              sort=True)
                     # undecided
@@ -745,10 +806,10 @@ class Pipeline:
                                 (coords_2.start < start) & (coords_2.end > end) & (coords_2.strand == strand)].copy()
                             gene.reset_index(drop=True, inplace=True)
                             gene.drop('seen', axis=1, inplace=True)
-                            gene.loc[0, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
+                            gene.loc[:, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
                                 gene.attributes.values[0].split(
                                     ';')[1:])
-                            gene.loc[0, 'gene_label'] = 2
+                            gene.loc[:, 'gene_label'] = 3
                             current_gene_set_w_isoforms = current_gene_set_w_isoforms.append(gene,
                                                                                              ignore_index=True,
                                                                                              sort=True)
@@ -792,10 +853,10 @@ class Pipeline:
                         if not isoforms:
                             gene = coords_1[(coords_1.start == start) & (coords_1.end == end)].copy()
                             gene.reset_index(drop=True, inplace=True)
-                            gene.loc[0, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
+                            gene.loc[:, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
                                 gene.attributes.values[0].split(
                                     ';')[1:])
-                            gene.loc[0, 'gene_label'] = 1
+                            gene.loc[:, 'gene_label'] = 1
                             current_gene_set_w_isoforms = current_gene_set_w_isoforms.append(gene,
                                                                                              ignore_index=True,
                                                                                              sort=True)
@@ -818,8 +879,8 @@ class Pipeline:
                                 (coords_2.start >= start) & (coords_2.end < end) & (coords_2.strand == strand)].copy()
                             gene.reset_index(drop=True, inplace=True)
                             gene.drop('seen', axis=1, inplace=True)
-                            gene.loc[0, 'gene_label'] = 2
-                            gene.loc[0, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
+                            gene.loc[:, 'gene_label'] = 2
+                            gene.loc[:, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
                                 gene.attributes.values[0].split(
                                     ';')[1:])
                             current_gene_set_w_isoforms = current_gene_set_w_isoforms.append(gene,
@@ -835,8 +896,8 @@ class Pipeline:
                         if not isoforms:
                             gene = coords_1[(coords_1.start == start) & (coords_1.end == end)].copy()
                             gene.reset_index(drop=True, inplace=True)
-                            gene.loc[0, 'gene_label'] = 1
-                            gene.loc[0, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
+                            gene.loc[:, 'gene_label'] = 1
+                            gene.loc[:, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
                                 gene.attributes.values[0].split(
                                     ';')[1:])
                             current_gene_set_w_isoforms = current_gene_set_w_isoforms.append(gene,
@@ -850,21 +911,24 @@ class Pipeline:
                                                                sort=True)
                     gene = coords_1[(coords_1.start == start) & (coords_1.end == end)].copy()
                     gene.reset_index(drop=True, inplace=True)
-                    gene.loc[0, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
+                    gene.loc[:, 'attributes'] = 'gene_id {};'.format(gene_id) + ';'.join(
                         gene.attributes.values[0].split(';')[1:])
-                    gene.loc[0, 'gene_label'] = 1
+                    gene.loc[:, 'gene_label'] = 1
                     current_gene_set_w_isoforms = current_gene_set_w_isoforms.append(gene,
                                                                                      ignore_index=True,
                                                                                      sort=True)
                 gene_id += 1
 
+
+                if current_gene_set_w_isoforms[pd.isna(current_gene_set_w_isoforms.gene_label)].shape[0] > 0:
+                    breakpoint()
             current_gene_set.loc[current_gene_set.contig == contig, 'gene_label'] = gene_labels
             current_gene_set.loc[current_gene_set.contig == contig, 'source'] = sources
 
             if np.any(coords_2.seen.values == 0):
                 unseen_genes = coords_2.loc[coords_2.seen == 0].drop('seen', axis=1)
                 unseen_genes.loc[:, 'gene_label'] = 2
-                current_gene_set = current_gene_set.append(unseen_genes, ignore_index=True, sort=True)
+                current_gene_set = current_gene_set.append(unseen_genes, ignore_index=True, sort=True) 
                 current_gene_set_w_isoforms = self.insert_unseen_genes(current_gene_set_w_isoforms, unseen_genes)
 
             current_gene_set.sort_values('start', inplace=True)

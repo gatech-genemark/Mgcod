@@ -64,8 +64,8 @@ def main(argv):
                                                            "relevant for isoform prediction. [5000]",
                                default=5000, dest='window_size', required=False, type=int)
     optional_args.add_argument('-st', '--stride', help='Step size in bp, with which window will be moved along '
-                                                       'sequence. Only relevant for isoform prediction. [5000]',
-                               default=5000, required=False, type=int, dest='stride')
+                                                       'sequence. Only relevant for isoform prediction. [If sequence <= 100kb 2500 bp else 5000 bp]',
+                               default=None, required=False, type=int, dest='stride')
     optional_args.add_argument('-t', '--tolerance', help='The maximally tolerated difference in prediction of gene '
                                                          'start or gene stop to consider the prediction of two models '
                                                          'isoforms. Only relevent for isoform prediction. [30]',
@@ -83,7 +83,7 @@ def main(argv):
     optional_args.add_argument('--logfile', required=False, help='Path to log file')
     optional_args.add_argument('-v', '--verbose', help='verbose', required=False, dest='verbose', action='store_true',
                                default=False)
-    optional_args.add_argument('--version', action='version', version='%(prog)s 1.0.0')
+    optional_args.add_argument('--version', action='version', version='%(prog)s 1.0.1')
     parser._action_groups.append(optional_args)
     args = parser.parse_args()
     args = vars(args)
@@ -148,7 +148,7 @@ def main(argv):
             print(f"Plotting log-odds ratios for {species}")
         for n, seq in enumerate(pipeline.sequence):
             length_sequence = len(seq)
-            contig = seq.id
+            contig = seq.id 
             if pipeline.predicted_switch_regions[contig] is None:
                 continue
             else:
