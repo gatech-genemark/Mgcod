@@ -10,7 +10,7 @@ import numpy as np
 import argparse
 import sys
 from matplotlib.lines import Line2D
-
+from tqdm import tqdm
 
 def get_size_and_gc(path):
     """
@@ -37,7 +37,7 @@ def read_results(result_paths, genome_paths):
     """
     results = pd.DataFrame(columns=['genetic_code', 'segment_length', 'genome_size', 'gc', 'genes_11',
                                     'genes_4', 'genes_15', 'genes_101', 'genes_equivalent']) 
-    for rp in result_paths:
+    for rp in tqdm(result_paths):
         c_result = pd.read_csv(rp, sep='\t')
         contig = c_result.iloc[0, 0]
         gp = genome_paths[contig]
@@ -119,7 +119,7 @@ def find_contigs_with_dual_coding(results):
     number_of_genes_per_genetic_code[15] = {11: [], 15: [], 4: [], 101: [], 'equivalent': []}
     number_of_genes_per_genetic_code[101] = {11: [], 15: [], 4: [], 101: [], 'equivalent': []}
     # count how often genes are coded by which genetic code
-    for gc, g11, g4, g15, g101, geq in zip(genetic_codes, genes_11, genes_4, genes_15, genes_101, genes_equivalent):
+    for contig, gc, g11, g4, g15, g101, geq in zip(results.index.values, genetic_codes, genes_11, genes_4, genes_15, genes_101, genes_equivalent):
         to_stack = []
         dual_coding = False
         if not np.all(np.isnan(g11)):

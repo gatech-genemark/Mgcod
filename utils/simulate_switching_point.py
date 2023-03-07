@@ -24,7 +24,7 @@ def read_genome(genome, coords, genetic_code):
     cwd = sys.path[0]
     cwd = '/'.join(cwd.split('/')[:-1])
     if not os.path.isfile(coords):
-            mgm = [f'{cwd}/lib/gmhmmp2', '-M', f'{cwd}/lib/mgm_{genetic_code}.mod', '-s',
+            mgm = [f'{cwd}/dependencies/gmhmmp2', '-M', f'{cwd}/dependencies/mgm_{genetic_code}.mod', '-s',
                       genome, '-f', 'gff', '-o', coords]
             call_mgm = subprocess.check_call(mgm)
     coords = pd.read_csv(coords, sep='\t', header=None, comment='#', 
