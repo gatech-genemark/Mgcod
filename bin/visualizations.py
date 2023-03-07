@@ -42,6 +42,10 @@ class Visualizations:
         #   self.gene_label_to_gcode = self.gene_label_to_gcode[0]
         self.label_to_gcode = {0: 11, 1: 4, 2: 15, 3: 101}
         self.gcode_to_label = {11: 0, 4: 1, 15: 2, 101: 3}
+        if self.stride is None and len(self.sequence) <= 100000:
+            self.stride = 2500
+        elif self.stride is None and len(self.sequence) > 100000:
+            self.stride = 5000
 
     def __call__(self):
         self.logodd_ratios = self.get_logodd_ratios()
@@ -65,10 +69,10 @@ class Visualizations:
         """
         legend_elements = {}
         colors = ['blue', 'green', 'red', 'orange']
-        x_values_1 = np.arange(0, len(self.sequence), self.window_size)
-        x_values_2 = np.arange(self.window_size / 2, len(self.sequence) + self.window_size / 2, self.window_size)
+        x_values_1 = np.arange(0, len(self.sequence), self.stride)
+        x_values_2 = np.arange(self.window_size / 2, len(self.sequence)  + self.window_size / 2, self.stride)
         # center of windows
-        annotations_x = np.arange(self.window_size / 2, len(self.sequence) + self.window_size / 2, self.window_size)
+        annotations_x = np.arange(self.window_size / 2, len(self.sequence) + self.window_size / 2, self.stride)
         x_values = [None] * (len(x_values_2) + len(x_values_2))
         annotations_y = self.logodd_ratios[::2]
         # highest scoring model in window
@@ -152,11 +156,11 @@ class Visualizations:
                 gcode_label = self.gcode_to_label[int(gcode)]
                 if not str(gcode) in legend_elements:
                     legend_elements[str(gcode)] = Patch(facecolor=colors[gcode_label], alpha=0.6,
-                                                        label="Genes predicted in code " + str(gcode))
+                                                        label="Genes predicted by code model " + str(gcode))
             elif gene_label == 3:
                 if not str(gcode.replace('_', '&')) in legend_elements:
                     legend_elements[str(gcode.replace('_', '&'))] = Patch(facecolor='lightgrey', alpha=0.5,
-                                                                          label="Genes predicted in codes " +\
+                                                                          label="Genes predicted by code models " +\
                                                                                 str(gcode.replace('_', '&')))
         legend_elements['SP'] = Line2D([0], [0], color='black', ls='--', label='Positions of predicted code switches')
 
@@ -171,7 +175,7 @@ class Visualizations:
         [ax[i].set_xlim([0.0, self.length_sequence]) for i in range(self.logodd_ratios.shape[1])]
         [ax[i].set_ylim([-0.05, 1.05]) for i in range(self.logodd_ratios.shape[1])]
         # set labels
-        [ax[i].set_ylabel('Code {}'.format(self.label_to_gcode[self.labels[i]], fontdict={'fontsize': 8})) for i in
+        [ax[i].set_ylabel('Code model {}'.format(self.label_to_gcode[self.labels[i]], fontdict={'fontsize': 8})) for i in
          range(self.logodd_ratios.shape[1])]
         [ax[i].get_xaxis().set_visible(False) for i in range(self.logodd_ratios.shape[1])]
         ax[-1].set_xlabel('Position in genome in bp', fontdict={'fontsize': 10})
