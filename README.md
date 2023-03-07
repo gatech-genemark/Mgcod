@@ -73,7 +73,7 @@ Mgcod creates a series of output files:
 
 ### Usage:  
 <pre><code>mgcod.py -h
-sage: mgcod.py [-h] -i PATH_TO_GENOME [-p PATH_TO_PREDICTIONS] [-o OUTPUT]
+usage: mgcod.py [-h] -i PATH_TO_GENOME [-p PATH_TO_PREDICTIONS] [-o OUTPUT]
                 [-m PATH_TO_PLOTS] [-r] [--isoforms] [-n CONSECUTIVE_WINDOWS]
                 [-g CONSECUTIVE_GENE_LABELS] [-w WINDOW_SIZE] [-st STRIDE]
                 [-t TOLERANCE] [-d] [-AA] [-NT] [--short_contigs]
