@@ -110,7 +110,6 @@ class Pipeline:
             self.updated_genome_labels = updated_labels
             # unique genetic code predicted
             if np.unique(np.concatenate(self.updated_genome_labels)).shape[0] == 1:
-                breakpoint()
                 logging.info(f"{self.species} is genetic code {self.label_to_gcode[self.updated_genome_labels[0][0]]}")
                 if self.verbose:
                     print(f"{self.species} is genetic code {self.label_to_gcode[self.updated_genome_labels[0][0]]}")
@@ -919,9 +918,6 @@ class Pipeline:
                                                                                      sort=True)
                 gene_id += 1
 
-
-                if current_gene_set_w_isoforms[pd.isna(current_gene_set_w_isoforms.gene_label)].shape[0] > 0:
-                    breakpoint()
             current_gene_set.loc[current_gene_set.contig == contig, 'gene_label'] = gene_labels
             current_gene_set.loc[current_gene_set.contig == contig, 'source'] = sources
 
