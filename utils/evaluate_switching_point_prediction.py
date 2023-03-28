@@ -130,9 +130,9 @@ def main(argv):
     error_switch_type_1 = get_prediction_error(correct_annotations, correct_predictions, switch_type=1)
     # 4 --> 11
     error_switch_type_2 = get_prediction_error(correct_annotations, correct_predictions, switch_type=2) 
-    print("Error switch type I: {} =/- {}".format(np.mean(error_switch_type_1), np.std(error_switch_type_1)))
-    print("Error switch type II: {} =/- {}".format(np.mean(error_switch_type_2), np.std(error_switch_type_2)))
-    print("Overall Error: {} +/- {}".format(np.mean(np.concatenate([error_switch_type_1, error_switch_type_2])),
+    print("Error switch type I: {} =/- {}".format(np.mean(np.abs(error_switch_type_1)), np.std(error_switch_type_1)))
+    print("Error switch type II: {} =/- {}".format(np.mean(np.abs(error_switch_type_2)), np.std(error_switch_type_2)))
+    print("Overall Error: {} +/- {}".format(np.mean(np.abs(np.concatenate([error_switch_type_1, error_switch_type_2]))),
                                             np.std(np.concatenate([error_switch_type_1, error_switch_type_2]))))
     print('Correct switches within 5000bp:')
     print('11 -> 4: {}'.format((np.abs(error_switch_type_1) <= 5000).sum()))
