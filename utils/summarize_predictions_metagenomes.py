@@ -11,6 +11,8 @@ import argparse
 import sys
 from matplotlib.lines import Line2D
 from tqdm import tqdm
+import multiprocessing as mp
+from itertools import islice, takewhile, repeat
 
 def get_size_and_gc(path):
     """
@@ -28,16 +30,18 @@ def get_size_and_gc(path):
     return size, gc
 
 
-def read_results(result_paths, genome_paths):
+def read_results_helper(args):
     """
     Parse Mgcod results
     :param result_paths: list, paths to Mgcod results (*.tab files)
     :param genome_paths: dict, mapping of contigs to contig paths
     :return: pd.DataFrame, Mgcod results
     """
+    result_paths, genome_paths = args
     results = pd.DataFrame(columns=['genetic_code', 'segment_length', 'genome_size', 'gc', 'genes_11',
-                                    'genes_4', 'genes_15', 'genes_101', 'genes_equivalent']) 
-    for rp in tqdm(result_paths):
+                                    'genes_4', 'genes_15', 'genes_101', 'genes_equivalent'])
+
+    for rp in result_paths:
         c_result = pd.read_csv(rp, sep='\t')
         contig = c_result.iloc[0, 0]
         gp = genome_paths[contig]
@@ -75,6 +79,23 @@ def read_results(result_paths, genome_paths):
         results.loc[contig] = [genetic_code, segment_length, size, gc, genes_11, genes_4, genes_15, genes_101, genes_equivalent]
     return results
 
+
+def read_results(result_paths, genome_paths, threads=16):
+    """
+    Parse Mgcod results
+    :param result_paths: list, paths to Mgcod results (*.tab files)
+    :param genome_paths: dict, mapping of contigs to contig paths
+    :return: pd.DataFrame, Mgcod results
+    """
+    iterator = iter(result_paths)
+    chunks = takewhile(bool, (list(islice(iterator, 256)) for _ in repeat(None)))
+    ready_to_map = [(c, genome_paths) for c in chunks]
+    pool = mp.Pool(processes=threads)
+    results = pool.map(read_results_helper, ready_to_map)
+    pool.close()
+    pool.join()
+    results = pd.concat(results)
+    return results
 
 def filter_contigs_based_on_segment_length(results):
     """
@@ -292,6 +313,7 @@ def main(argv):
     parser.add_argument("-g", "--genomes", help="File with paths to genome files, one path per line", required=True)
     parser.add_argument("-o", "--output", help="Path to file to write summarized dataframe to", required=True)
     parser.add_argument('-p', '--plot_dir', help='Directory where to save plots', required=True)
+    parser.add_argument('-t', '--threads', help='Number of CPUs to use. [16]', default=16)
     args = parser.parse_args()
 
     result_paths = []
@@ -306,7 +328,7 @@ def main(argv):
             contig = line.strip().split('_')[-1].split('.fna')[0]
             genome_paths[contig] = line.strip()
     genomes.close()
-    results = read_results(result_paths, genome_paths)   
+    results = read_results(result_paths, genome_paths, args.threads)   
     results, dual_coded_segments = summarize_results(results, args.output)
     plot_frequency_with_that_a_genetic_code_is_distinctly_encoded_in_one_block(dual_coded_segments, args.plot_dir)
 
