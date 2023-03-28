@@ -37,7 +37,7 @@ def get_command(args):
         if args.short_contigs:
             command.append('--short_contigs')
         if args.stride:
-            command.appen('-st')
+            command.append('-st')
             command.append(str(args.stride)) 
         logging.info(f"Base command: {' '.join(command)}")
         return command
@@ -115,6 +115,8 @@ def main(argv):
                                required=False)
     parser._action_groups.append(optional_args)
     args = parser.parse_args()
+    if not os.path.isdir(args.path_to_output):
+        os.makedirs(args.path_to_output)
     if not args.logfile:
         current_time = time.localtime()
         logfile = 'log/mgcod_{}{}{}{}{}{}.log'.format(current_time.tm_year, current_time.tm_mon, current_time.tm_mday,
