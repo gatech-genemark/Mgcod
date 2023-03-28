@@ -53,9 +53,9 @@ def parse_mgcod_results(path_results, target_genomes, alternative_gcode):
     if alternative_gcode == 'opal':
         alternative_gcode = '4'
     elif alternative_gcode == 'amber':
-       	alternative_gcode = '15'
+        alternative_gcode = '15'
     elif alternative_gcode == 'ochre':
-       	alternative_gcode = '101'
+        alternative_gcode = '101'
     results = []
     predictions = []
     for f in target_genomes:
@@ -230,6 +230,9 @@ def get_trna_positions(trnas, switch_points, predictions, alternative_genetic_co
                 else:
                    current_trnas['Begin'] = contig_size - (current_trnas['Begin'] - sp)
                    current_trnas['End'] = contig_size - (current_trnas['End'] - sp)
+        elif len(switch_points[switch_points.contig == con][column_order].values[0]) > 3:
+            print(f'More than 2 continuous blocks split linearization point were predicted in {con}. Removing {con} from analysis')
+            continue
         seq.seq = rooted_seq
         if len(switch_points[switch_points.contig == con][column_order].values[0].split(', ')) <= 3:
             assert len(rooted_seq) == contig_size, "Something went wrong during rooting, {}".format(path_genome)
@@ -306,7 +309,6 @@ def plot_distance_from_switch(positions_trnas, alternative_genetic_code, output_
                                current_trnas.trna_end.values - current_trnas.contig_size.values]).T
         for n in range(distances.shape[0]):
             if np.argmin(np.abs(distances[n])) == 0:
-                segment_length = current_trnas.switch_point.values[0]
                 start = 1 + current_trnas.trna_start.values[n] / current_trnas.contig_size.values[0]
 
                 end = start + 0.1
@@ -315,7 +317,6 @@ def plot_distance_from_switch(positions_trnas, alternative_genetic_code, output_
 
             elif np.argmin(np.abs(distances[n])) == 1:
                 if distances[n, 1] < 0:
-                    segment_length = current_trnas.switch_point.values[0]
                     start = 1 + current_trnas.trna_start.values[n] / current_trnas.contig_size.values[0]
 
                     end = start + 0.1
@@ -323,15 +324,13 @@ def plot_distance_from_switch(positions_trnas, alternative_genetic_code, output_
                         end = 2.0
 
                 elif distances[n, 1] >= 0:
-                    segment_length = current_trnas.contig_size.values[0] - current_trnas.switch_point.values[0]                 
                     start = 1 - ((current_trnas.trna_start.values[n] - current_trnas.switch_point.values[0]) / current_trnas.contig_size.values[0])
                     end = start + 0.1
                     if end > 1.0:
                         end = 1.0
 
             elif np.argmin(np.abs(distances[n])) == 2:
-                segment_length = current_trnas.contig_size.values[0] - current_trnas.switch_point.values[0]
-                start = 1 - (segment_length - (current_trnas.trna_start.values[n] - current_trnas.switch_point.values[0])) / current_trnas.contig_size.values[0] 
+                start = 1 - (current_trnas.contig_size.values[0] - current_trnas.trna_end.values[n]) / current_trnas.contig_size.values[0] 
                 end = start + 0.1
                 if end > 1.0:
                     end = 1.0
@@ -347,13 +346,7 @@ def plot_distance_from_switch(positions_trnas, alternative_genetic_code, output_
             elif current_trnas.strand.values[n] == 1 and current_trnas.mode_strand.values[0] == '-':
                 color = 'blue'
                 pos_strand += 1
-            if current_trnas.mode_strand.values[0] == '+':
-                ls = '-'
-            else:
-                ls = ':'
-            if start < 0.5:
-                print(contig)
-            ax.hlines(i, start, end, color=color, linestyles=ls)
+            ax.hlines(i, start, end, color=color, linestyles='-')
     print(f"{pos_strand} tRNAs on (+)-strand")
     print(f"{neg_strand} tRNAs on (-)-strand")
     ax.vlines(1, 0, current_positions.contig.unique().shape[0], linestyles='dashed', alpha=0.6, color='black')
