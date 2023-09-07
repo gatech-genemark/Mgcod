@@ -18,7 +18,7 @@ import time
 
 def get_command(args):
         cwd = sys.path[0]
-        command = ['{}/mgcod.py'.format(cwd), '-o', args.output, '-p', args.path_to_predictions, '-n',
+        command = ['{}/mgcod.py'.format(cwd), '-o', args.path_to_output, '-p', args.path_to_predictions, '-n',
                    str(args.consecutive_windows), '-g', str(args.consecutive_gene_labels), '-w', str(args.window_size),
                    '-t', str(args.tolerance)]
         if args.path_to_plots:
@@ -69,7 +69,7 @@ def main(argv):
                                                               'supporting outputs. If path does not exist, it will be '
                                                               'created. If -AA or -NT flag is set, sequences will be '
                                                               'saved here, too. [./results/]',
-                               required=False, dest='output', default=f'{cwd}/results/')
+                               required=False, dest='path_to_output', default=f'{cwd}/results/')
     optional_args.add_argument('-m', '--path_to_plots', help='Directory where to save plots. Plots logodd ratio per '
                                                              'window for different MGM models. Only available with '
                                                              'isoform prediction. If path does not exist, it will be '
