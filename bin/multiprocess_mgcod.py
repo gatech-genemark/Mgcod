@@ -113,6 +113,7 @@ def main(argv):
     optional_args.add_argument('--threads', help='Number of processes. [8]', type=int, default=8)
     optional_args.add_argument('--batch_size', help='Batch size for multiprocessing. [256]', type=int, default=256,
                                required=False)
+    optional_args.add_argument('--version', action='version', version='%(prog)s 1.0.2')
     parser._action_groups.append(optional_args)
     args = parser.parse_args()
     if not os.path.isdir(args.path_to_output):
